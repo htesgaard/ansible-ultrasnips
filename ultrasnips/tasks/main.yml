@@ -1,2 +1,39 @@
 ---
 # tasks file for ultrasnips
+
+- name: "setup  |  brew | ensure non-OS common packages present"
+  homebrew: name="{{ item }}"
+  with_items: [ 'vim' ]
+  when:  ansible_system == 'Darwin'
+
+- name: "setup  |   apt | ensure common packages present"
+  become: Yes
+  apt: name="{{ item }}" update_cache=Yes cache_valid_time=86400
+  with_items: [ 'vim' ]
+  when:  ansible_pkg_mgr == 'apt'
+
+- name: "setup  |   pkg | ensure common packages present"
+  become: Yes
+  pkgng: name="{{ item }}" state=present
+  with_items: [ 'vim-lite' ]
+  when: ansible_pkg_mgr == 'pkgng'
+
+- name: "config |   vim | checkout vundle"
+  git:
+    repo: 'https://github.com/VundleVim/Vundle.vim.git'
+    dest: '~/.vim/bundle/Vundle.vim'
+
+- name: "config |   vim | ensure my ~/.vimrc"
+  copy: src=.vimrc dest=~/.vimrc
+
+  # - name: insert/update HTML surrounded by custom markers after <body> line
+  # blockinfile:
+  #   path: /var/www/html/index.html
+  #   marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
+  #   insertafter: "<body>"
+  #   content: |
+  #     <h1>Welcome to {{ ansible_hostname }}</h1>
+  #     <p>Last updated on {{ ansible_date_time.iso8601 }}</p>
+
+- name: "config |   vim | vim +PluginInstall +qall"
+  command: 'vim +PluginInstall +qall'
